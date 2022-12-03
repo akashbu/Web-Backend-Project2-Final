@@ -1,0 +1,14 @@
+mount-dir: "./database/secondary1/mount"
+data-dir:  "./database/secondary1/data"
+
+# exec: hypercorn game_service --reload --debug --bind game_service.local.gd:$PORT --access-logfile - --error-logfile - --log-level DEBUG
+
+http:
+  addr: ":20204"
+
+static:
+  primary: false
+
+  hostname: "127.0.0.1"
+
+  advertise-url: "http://127.0.0.1:20202"
