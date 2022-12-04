@@ -3,10 +3,10 @@
 This README describes how to run the app and test the various access points.
 
 ### Authors
-Group 17
+Group 14
 Members: 
-- Akash Butala (akbutala@csu.fullerton.edu)
-- Heet Savla (heetsavla@csu.fullerton.edu)
+- Brijesh Prajapati (brijesh.prajapati@csu.fullerton.edu)
+- Muktita Kim (muktitakim@csu.fullerton.edu)
 - Sam Truong (samtruonh@csu.fullerton.edu)
 
 
@@ -80,16 +80,16 @@ $ sudo service nginx restart
 
 ```
 
+### Launching the App
+Use the following command to start the app. 
+```
+$ foreman start
+
+```
 ### Initializing the Database
 Before running the app, run the following command to initialize the database and populate the table.
 ```
 $ ./bin/init.sh
-
-```
-### Launching the App
-Use the following command to start the app. (3 game service and 1 user service will start)
-```
-$ foreman start --formation "game_service=3,user_service=1"
 
 ```
 
