@@ -1,4 +1,4 @@
-# CPSC 449 - Project 2 - Wordle Mock Backend
+# CPSC 449 - Project 3
 
 This README describes how to run the app and test the various access points.
 
