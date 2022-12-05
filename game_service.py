@@ -12,6 +12,7 @@ import utils.helpers as helpers
 from typing import Tuple, Optional
 from quart import Quart, jsonify, g, request, abort
 from quart_schema import QuartSchema, validate_request
+from itertools import cycle
 
 app = Quart(__name__)
 QuartSchema(app)
@@ -28,15 +29,18 @@ class Guess:
 class Username:
     username: str
 
-async def _connect_db():
-    database = databases.Database(app.config["DATABASES"]["GAMES"])
+iter = cycle(["GAME1", "GAME2", "GAME3"])
+
+async def _connect_db(dbVal):
+
+    database = databases.Database(app.config["DATABASES"][dbVal])
     await database.connect()
     return database
 
 
-def _get_db():
+def _get_db(dbVal):
     if not hasattr(g, "sqlite_db"):
-        g.sqlite_db = _connect_db()
+        g.sqlite_db = _connect_db(dbVal)
     return g.sqlite_db
 
 
@@ -68,7 +72,8 @@ async def start_game():
     """
     username = request.authorization.username
 
-    db =  await _get_db()
+    dbVal = next(iter)
+    db =  await _get_db(dbVal)
 
     query = "SELECT word FROM secret_word ORDER BY RANDOM() LIMIT 1"
     app.logger.info(query), app.logger.warning(query)
@@ -78,6 +83,8 @@ async def start_game():
         gameid = str(uuid.uuid4())
         query = "INSERT INTO games(gameid, username, secretWord) VALUES(:gameid, :username, :secret_word)"
         values = {"gameid":gameid, "username": username, "secret_word": secret_word.word}
+        
+        db = await _get_db("GAME1")
         await db.execute(query=query, values=values)
     except sqlite3.IntegrityError as e:
         abort(409, e)
@@ -94,7 +101,9 @@ async def list_active_games():
     """
     username = request.authorization.username
 
-    db =  await _get_db()
+    dbVal = next(iter)
+
+    db =  await _get_db(dbVal)
     query = """
             SELECT gameid FROM games WHERE username = :username AND isActive = 1
             """
@@ -129,7 +138,9 @@ async def retrieve_game(gameid):
     of attempts left before the game ends.
     """
     username = request.authorization.username
-    db =  await _get_db()
+
+    dbVal = next(iter)
+    db =  await _get_db(dbVal)
 
     if await game_is_active(db, username, gameid):
         query = """
@@ -177,7 +188,10 @@ async def make_guess(gameid, data: Guess):
     """
     username = request.authorization.username
     data = await request.get_json()
-    db =  await _get_db()
+
+    dbVal = next(iter)
+
+    db =  await _get_db(dbVal)
 
     if await game_is_active(db, username, gameid):
         # Validate the guessed word first:
@@ -196,6 +210,8 @@ async def make_guess(gameid, data: Guess):
             query = """
                     INSERT INTO guesses(gameid, guess) VALUES(:gameid, :guess)
                     """
+
+            db = _get_db("GAME1")
             await db.execute(query=query, values={"gameid": gameid, "guess": data["guess"]})
         except sqlite3.IntegrityError as e:
             # guesses are unique per game
@@ -206,6 +222,10 @@ async def make_guess(gameid, data: Guess):
                 SELECT secretWord AS secret_word FROM games WHERE gameid = :gameid
                 """
         app.logger.info(query), app.logger.warning(query)
+
+        dbVal = next(iter)
+        db = _get_db("GAME1")
+
         game = await db.fetch_one(query=query, values={"gameid": gameid})
         secret_word = game.secret_word 
 
@@ -229,6 +249,7 @@ async def make_guess(gameid, data: Guess):
                     SET isActive = 0, hasWon = 1
                     WHERE gameid = :gameid
                     """
+            db = _get_db("GAME1")
             await db.execute(query=query, values={"gameid": gameid})
 
             return helpers.jsonify_message(f"Correct! The answer was {secret_word}.")
@@ -238,6 +259,8 @@ async def make_guess(gameid, data: Guess):
                     SET isActive = 0
                     WHERE gameid = :gameid
                     """
+            
+            db = await _get_db("GAME1")
             await db.execute(query=query, values={"gameid": gameid})
             
             return helpers.jsonify_message(f"You have lost! You have made {max_num_attempts} incorrect attempts. The secret word was {secret_word}.")

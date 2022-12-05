@@ -1,0 +1,9 @@
+mount-dir: "./database/primary/mount"
+data-dir: "./database/primary/data"
+
+static:
+  primary: true
+
+  hostname: "127.0.0.1"
+
+  advertise-url: "http://127.0.0.1:20202"

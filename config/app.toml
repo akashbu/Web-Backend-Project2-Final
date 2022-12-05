@@ -1,5 +1,7 @@
 [DATABASES]
-GAMES = 'sqlite+aiosqlite:///database/games.db'
+GAMES1 = 'sqlite+aiosqlite:///database/primary/mount/games.db'
+GAMES2 = 'sqlite+aiosqlite:///database/secondary/mount/games.db'
+GAMES3 = 'sqlite+aiosqlite:///database/secondary1/mount/games.db'
 USERS = 'sqlite+aiosqlite:///database/users.db'
 
 [WORDLE]
